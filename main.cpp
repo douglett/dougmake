@@ -32,7 +32,16 @@ regex includefile("\\s*#include\\s+\"(.+)\"");
 string bin_files;
 
 vector<cfile> files;
+vector<string> args;
 int currenttime = 0;
+
+
+// helper - string to lower case
+string tolower(string str) {
+	for (auto &c : str)
+		c = std::tolower(c);
+	return str;
+}
 
 
 int filelist(string path) {
@@ -148,18 +157,32 @@ int compile(const cfile &cf) {
 
 
 int arguments(int argc, char** argv) {
-	// for (int i = 0; i < argc; i++) {
-	// 	string s = argv[i];
-	// 	cout << s << endl;
-	// }
+	for (int i = 0; i < argc; i++) {
+		string s = tolower(argv[i]);
+		args.push_back(s);
+	}
+	return 0;
+}
+
+
+int has_arg(string arg) {
+	for (auto a : args)
+		if (a == arg)
+			return 1;
 	return 0;
 }
 
 
 
 int main(int argc, char** argv) {
-	arguments(argc, argv);
 	currenttime = time(NULL);
+	arguments(argc, argv);
+
+	if (has_arg("clean")) {
+		cout << "cleaning bin files..." << endl;
+		system("rm -rf bin");  // just delete bin and exit
+		return 0;
+	}
 
 	system("mkdir -p bin");  // make bin directory
 	filelist(".");  // get all base files
@@ -198,5 +221,14 @@ int main(int argc, char** argv) {
 	// make the main executable
 	string cmd = CC + bin_files + " -o ./bin/main.out";
 	int err = system(cmd.c_str());
+	if (err) {
+		return err;
+	} else if (has_arg("run")) {
+		const char* s = "./bin/main.out";
+		cout << "running: " << s << endl;
+		err = system(s);
+	}
+
+	// return either main.out make error, or run error
 	return err;
 }
