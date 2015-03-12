@@ -21,18 +21,23 @@ public:
 	cfile(string tfname, string tpath, double tmtime) 
 			: fname(tfname), path(tpath), mtime(tmtime) { }
 	string fpath() const {
+		if (path == ".")
+			return fname;
 		return path + "/" + fname;
 	}
 };
 
 const string CC = "clang++ -Wall -std=c++11 -stdlib=libc++";
-regex cppfile(".+\\.(cpp|hpp|c|h)");
-regex cppsourcefile("(.+)\\.(cpp|c)");
-regex includefile("\\s*#include\\s+\"(.+)\"");
-string bin_files;
+const regex cppfile(".+\\.(cpp|hpp|c|h)");
+const regex cppsourcefile("(.+)\\.(cpp|c)");
+const regex includefile("\\s*#include\\s+\"(.+)\"");
+
+const string txt_cyan = "\e[0;36m";
+const string txt_reset = "\e[0m";
 
 vector<cfile> files;
 vector<string> args;
+string bin_files;
 int currenttime = 0;
 
 
@@ -120,7 +125,7 @@ double latest_modtime(const string &fpath) {
 	struct stat st;
 	int err = lstat(fpath.c_str(), &st);  // get file statistics
 	if (err)
-		return 0;  // oldest possible file :)
+		return 0;  // file doesn't exist, return oldest possible file time
 	return (double)st.st_mtime;
 }
 
@@ -140,11 +145,13 @@ string cpp_base_fname(const cfile &cf) {
 }
 
 
-int compile(const cfile &cf) {
+int compile(const cfile &cf, int& did_compile) {
+	did_compile = 0;
 	string objname = "./bin/" + cpp_base_fname(cf) + ".o";
 	bin_files += " " + objname;
 
 	if (latest_modtime(objname) < latest_modtime(cf)) {
+		did_compile = 1;
 		string command = CC 
 			+ " -I " + cf.path
 			+ " -c -o " + objname 
@@ -178,6 +185,7 @@ int main(int argc, char** argv) {
 	currenttime = time(NULL);
 	arguments(argc, argv);
 
+	// check if we just need to do cleanup
 	if (has_arg("clean")) {
 		cout << "cleaning bin files..." << endl;
 		system("rm -rf bin");  // just delete bin and exit
@@ -201,32 +209,43 @@ int main(int argc, char** argv) {
 
 	// display dependancies of this file
 	for (auto &f : files) {
-		cout << f.fpath() << "  [  ";
+		cout << txt_cyan << f.fpath() << " :: " << txt_reset;
 		for (auto i : f.deps)
 			cout << files[i].fname << "  ";
 		// cout << "]  " << (__int64_t)latest_modtime(f) << endl;
-		cout << "]" << endl;
+		cout << endl;
 	}
 	cout << endl;
 
 	// compile all files
+	int compile_count = 0;
 	for (auto &f : files) {
-		int err = 0;
+		int err = 0, did_compile = 0;
 		if (is_source(f))
-			err = compile(f);
+			err = compile(f, did_compile);
 		if (err)
 			return 1;  // stop here if there was an error
+		if (did_compile)
+			compile_count++;
 	}
 
 	// make the main executable
-	string cmd = CC + bin_files + " -o ./bin/main.out";
-	int err = system(cmd.c_str());
-	if (err) {
-		return err;
-	} else if (has_arg("run")) {
-		const char* s = "./bin/main.out";
-		cout << "running: " << s << endl;
-		err = system(s);
+	string outfile = "./bin/main.out";
+	int err = 0;
+	if (latest_modtime(outfile) == 0 || compile_count > 0) {
+		string cmd = CC + bin_files + " -o " + outfile;
+		cout << cmd << endl;
+		err = system(cmd.c_str());
+		if (err) {
+			return err;
+		}
+		cout << endl;
+	}
+
+	// run the executable, if required
+	if (has_arg("run")) {
+		cout << "running: " << outfile << endl;
+		err = system(outfile.c_str());
 	}
 
 	// return either main.out make error, or run error
