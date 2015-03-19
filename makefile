@@ -8,5 +8,8 @@ $(OUT): $(SRC) $(HEAD)
 run: $(OUT)
 	./$(OUT)
 
+install: $(OUT)
+	install $(OUT) /usr/local/bin/dmake
+
 clean:
-	rm -rf *.out *.o
+	rm -rf *.out *.o $(OUT)
