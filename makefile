@@ -1,6 +1,6 @@
 OUT=main.out
-SRC=main.cpp
-HEAD=
+SRC=main.cpp helpers.cpp
+HEAD=helpers.h
 
 $(OUT): $(SRC) $(HEAD)
 	clang++ -Wall -std=c++11 -stdlib=libc++ -o $(OUT) $(SRC)

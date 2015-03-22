@@ -3,11 +3,12 @@
 #include <regex>
 #include <array>
 #include <vector>
+#include <map>
 
 #include <dirent.h>
 #include <sys/stat.h>
 #include <time.h>
-#include "asd.h"
+#include "helpers.h"
 
 using namespace std;
 
@@ -37,16 +38,10 @@ const string txt_reset = "\e[0m";
 
 vector<cfile> files;
 vector<string> args;
+map<string, string> config;
 string bin_files;
 int currenttime = 0;
 
-
-// helper - string to lower case
-string tolower(string str) {
-	for (auto &c : str)
-		c = std::tolower(c);
-	return str;
-}
 
 
 int filelist(string path) {
@@ -62,7 +57,7 @@ int filelist(string path) {
 		if (string(".") == ent->d_name || string("..") == ent->d_name)
 			continue;
 
-		string filepath = path + "/" + ent->d_name;
+		string filepath = ( path == "." ? "" : path + "/" ) + ent->d_name;
 		lstat(filepath.c_str(), &st);  // get file statistics
 
 		// if we find a directory, get a file sub-list
@@ -86,7 +81,6 @@ int filelist(string path) {
 
 
 int find_includes(cfile &cf) {
-	// regex ex("\\s*#include\\s+([<\"])(.+)[>\"]\\s*");
 	smatch match;
 	string s;
 	fstream file;
@@ -95,8 +89,6 @@ int find_includes(cfile &cf) {
 	while (!file.eof()) {
 		getline(file, s);
 		if (regex_search(s, match, includefile)) {
-			// cout << "\t" << match[1] << endl;
-			
 			// add file indexes to the list
 			for (int i = 0; i < files.size(); i++) {
 				if (files[i].fname == match[1])
@@ -150,10 +142,17 @@ int compile(const cfile &cf, int& did_compile) {
 	string objname = "./bin/" + cpp_base_fname(cf) + ".o";
 	bin_files += " " + objname;
 
+	string pkg_config;
+	if (config.count("pkg-config")) {
+		pkg_config = " `pkg-config --cflags " + config["pkg-config"] + "`";
+		// cout << "pkg-config: " << pkg_config << endl;
+	}
+
 	if (latest_modtime(objname) < latest_modtime(cf)) {
 		did_compile = 1;
 		string command = CC 
-			+ " -I " + cf.path
+			+ " -I" + cf.path
+			+ pkg_config
 			+ " -c -o " + objname 
 			+ " " + cf.fpath();
 		cout << command << endl;
@@ -180,10 +179,34 @@ int has_arg(string arg) {
 }
 
 
+int get_config() {
+	// check for conf file
+	fstream file;	
+	file.open("dmake.conf");
+	if (!file.is_open())
+		return 0;
+
+	// add config into a key:value array
+	string s;
+	while (getline(file, s)) {
+		int i = s.find(":");
+		if (i == string::npos)
+			continue;
+		string key = choppa( s.substr(0, i) );
+		string val = choppa( s.substr(i+1) );
+		config[key] = val;
+	}
+
+	file.close();
+	return 1;
+}
+
+
 
 int main(int argc, char** argv) {
 	currenttime = time(NULL);
 	arguments(argc, argv);
+	get_config();
 
 	// check if we just need to do cleanup
 	if (has_arg("clean")) {
@@ -233,7 +256,12 @@ int main(int argc, char** argv) {
 	string outfile = "./bin/main.out";
 	int err = 0;
 	if (latest_modtime(outfile) == 0 || compile_count > 0) {
-		string cmd = CC + bin_files + " -o " + outfile;
+		string pkg_config;
+		if (config.count("pkg-config")) {
+			pkg_config = " `pkg-config --libs " + config["pkg-config"] + "`";
+		}
+
+		string cmd = CC + bin_files + pkg_config + " -o " + outfile;
 		cout << cmd << endl;
 		err = system(cmd.c_str());
 		if (err) {
