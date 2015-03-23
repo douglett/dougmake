@@ -8,6 +8,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <time.h>
+
 #include "helpers.h"
 
 using namespace std;
@@ -44,6 +45,66 @@ int currenttime = 0;
 
 
 
+// --- helpers ---
+
+
+// helper - true for "*.cpp"
+int is_source(const cfile &cf) {
+	if (regex_match(cf.fname, cppsourcefile))
+		return 1;
+	return 0;
+}
+
+// helper - returns (fname).cpp from filename
+string cpp_base_fname(const cfile &cf) {
+	smatch match;
+	if (regex_search(cf.fname, match, cppsourcefile))
+		return match[1];
+	return "";
+}
+
+// helper - latest modified file, uses file info
+double latest_modtime(const cfile &cf) {
+	double mtime = cf.mtime;
+	for (auto i : cf.deps)
+		if (files[i].mtime > mtime)
+			mtime = files[i].mtime;
+	return mtime;
+}
+
+// helper - latest modified file. takes a single file (anything, obj file)
+double latest_modtime(const string &fpath) {
+	struct stat st;
+	int err = lstat(fpath.c_str(), &st);  // get file statistics
+	if (err)
+		return 0;  // file doesn't exist, return oldest possible file time
+	return (double)st.st_mtime;
+}
+
+// helper - returns true if argument 'arg' is in array 'args'
+int has_arg(string arg) {
+	for (auto a : args)
+		if (a == arg)
+			return 1;
+	return 0;
+}
+
+
+
+// --- parse actions ---
+
+
+// get command line arguments into array 'args'
+int get_arguments(int argc, char** argv) {
+	for (int i = 0; i < argc; i++) {
+		string s = tolower(argv[i]);
+		args.push_back(s);
+	}
+	return 0;
+}
+
+
+// gets all files in directory 'path'
 int filelist(string path) {
 	DIR *dir;
 	struct dirent *ent;
@@ -80,6 +141,7 @@ int filelist(string path) {
 }
 
 
+// find a list of #includes in the current file, and save in the files 'deps' array
 int find_includes(cfile &cf) {
 	smatch match;
 	string s;
@@ -102,41 +164,7 @@ int find_includes(cfile &cf) {
 }
 
 
-// latest modified file, uses file info
-double latest_modtime(const cfile &cf) {
-	double mtime = cf.mtime;
-	for (auto i : cf.deps)
-		if (files[i].mtime > mtime)
-			mtime = files[i].mtime;
-	return mtime;
-}
-
-
-// single file (anything, obj file)
-double latest_modtime(const string &fpath) {
-	struct stat st;
-	int err = lstat(fpath.c_str(), &st);  // get file statistics
-	if (err)
-		return 0;  // file doesn't exist, return oldest possible file time
-	return (double)st.st_mtime;
-}
-
-
-int is_source(const cfile &cf) {
-	if (regex_match(cf.fname, cppsourcefile))
-		return 1;
-	return 0;
-}
-
-
-string cpp_base_fname(const cfile &cf) {
-	smatch match;
-	if (regex_search(cf.fname, match, cppsourcefile))
-		return match[1];
-	return "";
-}
-
-
+// compile single file
 int compile(const cfile &cf, int& did_compile) {
 	did_compile = 0;
 	string objname = "./bin/" + cpp_base_fname(cf) + ".o";
@@ -158,27 +186,17 @@ int compile(const cfile &cf, int& did_compile) {
 		cout << command << endl;
 		return system(command.c_str());
 	}
-	return 0;
+	return 0;  // no error code
 }
 
 
-int arguments(int argc, char** argv) {
-	for (int i = 0; i < argc; i++) {
-		string s = tolower(argv[i]);
-		args.push_back(s);
-	}
-	return 0;
-}
+// link all files in "./bin"
+// int link_all() {
+// 	return 0;  // no error code
+// }
 
 
-int has_arg(string arg) {
-	for (auto a : args)
-		if (a == arg)
-			return 1;
-	return 0;
-}
-
-
+// get config information from "dmake.conf" file
 int get_config() {
 	// check for conf file
 	fstream file;	
@@ -205,7 +223,7 @@ int get_config() {
 
 int main(int argc, char** argv) {
 	currenttime = time(NULL);
-	arguments(argc, argv);
+	get_arguments(argc, argv);
 	get_config();
 
 	// check if we just need to do cleanup
