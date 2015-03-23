@@ -10,6 +10,7 @@
 #include <time.h>
 
 #include "helpers.h"
+// #include "config.h"
 
 using namespace std;
 
@@ -235,6 +236,9 @@ int main(int argc, char** argv) {
 	currenttime = time(NULL);
 	get_arguments(argc, argv);
 	get_config();
+	// config::load();
+	// config::show_all();
+	// return 0;
 
 	// check if we just need to do cleanup
 	if (has_arg("clean")) {
