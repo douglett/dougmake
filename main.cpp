@@ -190,10 +190,20 @@ int compile(const cfile &cf, int& did_compile) {
 }
 
 
-// link all files in "./bin"
-// int link_all() {
-// 	return 0;  // no error code
-// }
+// link all files in "./bin". 'compile_count' is the number of .o files compiled in the compile step
+int link_all(string outfile, int compile_count) {
+	if (latest_modtime(outfile) == 0 || compile_count > 0) {
+		string pkg_config;
+		if (config.count("pkg-config")) {
+			pkg_config = " `pkg-config --libs " + config["pkg-config"] + "`";
+		}
+
+		string cmd = CC + bin_files + pkg_config + " -o " + outfile;
+		cout << cmd << endl;
+		return system(cmd.c_str());
+	}
+	return 0;  // no error code
+}
 
 
 // get config information from "dmake.conf" file
@@ -272,21 +282,10 @@ int main(int argc, char** argv) {
 
 	// make the main executable
 	string outfile = "./bin/main.out";
-	int err = 0;
-	if (latest_modtime(outfile) == 0 || compile_count > 0) {
-		string pkg_config;
-		if (config.count("pkg-config")) {
-			pkg_config = " `pkg-config --libs " + config["pkg-config"] + "`";
-		}
-
-		string cmd = CC + bin_files + pkg_config + " -o " + outfile;
-		cout << cmd << endl;
-		err = system(cmd.c_str());
-		if (err) {
-			return err;
-		}
-		cout << endl;
-	}
+	int err = link_all(outfile, compile_count);
+	if (err)
+		return err;
+	cout << endl;
 
 	// run the executable, if required
 	if (has_arg("run")) {
