@@ -1,16 +1,14 @@
 #include <iostream>
 #include <fstream>
 #include <regex>
-#include <array>
 #include <vector>
-#include <map>
 
 #include <dirent.h>
 #include <sys/stat.h>
 #include <time.h>
 
 #include "helpers.h"
-// #include "config.h"
+#include "config.h"
 
 using namespace std;
 
@@ -30,7 +28,6 @@ public:
 	}
 };
 
-const string CC = "clang++ -Wall -std=c++11 -stdlib=libc++";
 const regex cppfile(".+\\.(cpp|hpp|c|h)");
 const regex cppsourcefile("(.+)\\.(cpp|c)");
 const regex includefile("\\s*#include\\s+\"(.+)\"");
@@ -38,9 +35,9 @@ const regex includefile("\\s*#include\\s+\"(.+)\"");
 const string txt_cyan = "\e[0;36m";
 const string txt_reset = "\e[0m";
 
+// string CC = "clang++ -std=c++11 -stdlib=libc++  -Wall";  // sensible default
 vector<cfile> files;
 vector<string> args;
-map<string, string> config;
 string bin_files;
 int currenttime = 0;
 
@@ -171,17 +168,11 @@ int compile(const cfile &cf, int& did_compile) {
 	string objname = "./bin/" + cpp_base_fname(cf) + ".o";
 	bin_files += " " + objname;
 
-	string pkg_config;
-	if (config.count("pkg-config")) {
-		pkg_config = " `pkg-config --cflags " + config["pkg-config"] + "`";
-		// cout << "pkg-config: " << pkg_config << endl;
-	}
-
 	if (latest_modtime(objname) < latest_modtime(cf)) {
 		did_compile = 1;
-		string command = CC 
+		string command = config::CC() 
 			+ " -I" + cf.path
-			+ pkg_config
+			+ config::pkg_config("cflags")
 			+ " -c -o " + objname 
 			+ " " + cf.fpath();
 		cout << command << endl;
@@ -194,12 +185,10 @@ int compile(const cfile &cf, int& did_compile) {
 // link all files in "./bin". 'compile_count' is the number of .o files compiled in the compile step
 int link_all(string outfile, int compile_count) {
 	if (latest_modtime(outfile) == 0 || compile_count > 0) {
-		string pkg_config;
-		if (config.count("pkg-config")) {
-			pkg_config = " `pkg-config --libs " + config["pkg-config"] + "`";
-		}
-
-		string cmd = CC + bin_files + pkg_config + " -o " + outfile;
+		string cmd = config::CC() 
+			+ bin_files 
+			+ config::pkg_config("libs") 
+			+ " -o " + outfile;
 		cout << cmd << endl;
 		return system(cmd.c_str());
 	}
@@ -207,38 +196,12 @@ int link_all(string outfile, int compile_count) {
 }
 
 
-// get config information from "dmake.conf" file
-int get_config() {
-	// check for conf file
-	fstream file;	
-	file.open("dmake.conf");
-	if (!file.is_open())
-		return 0;
-
-	// add config into a key:value array
-	string s;
-	while (getline(file, s)) {
-		int i = s.find(":");
-		if (i == string::npos)
-			continue;
-		string key = choppa( s.substr(0, i) );
-		string val = choppa( s.substr(i+1) );
-		config[key] = val;
-	}
-
-	file.close();
-	return 1;
-}
-
-
 
 int main(int argc, char** argv) {
 	currenttime = time(NULL);
 	get_arguments(argc, argv);
-	get_config();
-	// config::load();
+	config::load();
 	// config::show_all();
-	// return 0;
 
 	// check if we just need to do cleanup
 	if (has_arg("clean")) {

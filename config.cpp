@@ -11,7 +11,9 @@ using namespace std;
 
 namespace config {
 
-	static map<string, string> config;
+	static map<string, string> config = {
+		{ "cc", "clang++ -std=c++11 -stdlib=libc++ -Wall" }  // sensible default compiler
+	};
 
 
 	// get config information from "dmake.conf" file
@@ -40,6 +42,7 @@ namespace config {
 
 	// helper - useful to debug the conf file
 	int show_all() {
+		cout << "showing config options:" << endl;
 		for (auto c : config)
 			cout << c.first << " :: " << c.second << endl;
 		return 0;
@@ -50,10 +53,19 @@ namespace config {
 		if (!config.count("pkg-config"))
 			return "";  // no pkg-config set
 		else if (flags == "cflags")
-			return string(" `pkg-config --cflags ") + config["pkg-config"];
+			return string(" `pkg-config --cflags ") + config["pkg-config"] + "`";
 		else if (flags == "libs")
-			return string(" `pkg-config --libs ") + config["pkg-config"];
+			return string(" `pkg-config --libs ") + config["pkg-config"] + "`";
 		return "";  // unknown option - just return nothing
+	}
+
+
+	string CC() {
+		string cc = config["cc"];
+		if (config.count("ccflags")) {
+			cc += " " + config["ccflags"];
+		}
+		return cc;
 	}
 
 
