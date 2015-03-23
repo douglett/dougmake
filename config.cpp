@@ -46,4 +46,15 @@ namespace config {
 	}
 
 
+	string pkg_config(string flags) {
+		if (!config.count("pkg-config"))
+			return "";  // no pkg-config set
+		else if (flags == "cflags")
+			return string(" `pkg-config --cflags ") + config["pkg-config"];
+		else if (flags == "libs")
+			return string(" `pkg-config --libs ") + config["pkg-config"];
+		return "";  // unknown option - just return nothing
+	}
+
+
 } // end config
