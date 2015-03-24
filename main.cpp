@@ -165,13 +165,13 @@ int find_includes(cfile &cf) {
 // compile single file
 int compile(const cfile &cf, int& did_compile) {
 	did_compile = 0;
-	string objname = "./bin/" + cpp_base_fname(cf) + ".o";
+	string objname = "bin/" + cpp_base_fname(cf) + ".o";
 	bin_files += " " + objname;
 
 	if (latest_modtime(objname) < latest_modtime(cf)) {
 		did_compile = 1;
 		string command = config::CC() 
-			+ " -I" + cf.path
+			+ ( cf.path == "." ? "" : " -I" + cf.path )
 			+ config::pkg_config("cflags")
 			+ " -c -o " + objname 
 			+ " " + cf.fpath();
@@ -256,7 +256,7 @@ int main(int argc, char** argv) {
 	}
 
 	// make the main executable
-	string outfile = "./bin/main.out";
+	string outfile = "bin/main.out";
 	int err = link_all(outfile, compile_count);
 	if (err)
 		return err;

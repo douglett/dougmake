@@ -12,7 +12,7 @@ using namespace std;
 namespace config {
 
 	static map<string, string> config = {
-		{ "cc", "clang++ -std=c++11 -stdlib=libc++ -Wall" }  // sensible default compiler
+		{ "cc", "clang++ -std=c++11 -Wall" }  // sensible default compiler
 	};
 
 
