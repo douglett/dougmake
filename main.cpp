@@ -200,15 +200,23 @@ int link_all(string outfile, int compile_count) {
 int main(int argc, char** argv) {
 	currenttime = time(NULL);
 	get_arguments(argc, argv);
-	config::load();
-	// config::show_all();
 
-	// check if we just need to do cleanup
-	if (has_arg("clean")) {
-		cout << "cleaning bin files..." << endl;
-		system("rm -rf bin");  // just delete bin and exit
+	// print help and exit
+	if (has_arg("--help") || has_arg("-?")) {
+		cout << "options: -?, clean, rebuild, run" << endl;
 		return 0;
 	}
+
+	// check if we just need to do cleanup
+	if (has_arg("clean") || has_arg("rebuild")) {
+		cout << "cleaning bin files..." << endl;
+		system("rm -rf bin");  // just delete bin and exit
+		if (has_arg("clean"))
+			return 0;
+	}
+
+	// load config from dmake.conf file
+	config::load();
 
 	system("mkdir -p bin");  // make bin directory
 	filelist(".");  // get all base files
