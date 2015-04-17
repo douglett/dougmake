@@ -73,7 +73,7 @@ double latest_modtime(const cfile &cf) {
 // helper - latest modified file. takes a single file (anything, obj file)
 double latest_modtime(const string &fpath) {
 	struct stat st;
-	int err = lstat(fpath.c_str(), &st);  // get file statistics
+	int err = stat(fpath.c_str(), &st);  // get file statistics
 	if (err)
 		return 0;  // file doesn't exist, return oldest possible file time
 	return (double)st.st_mtime;
@@ -117,7 +117,7 @@ int filelist(string path) {
 			continue;
 
 		string filepath = ( path == "." ? "" : path + "/" ) + ent->d_name;
-		lstat(filepath.c_str(), &st);  // get file statistics
+		stat(filepath.c_str(), &st);  // get file statistics
 
 		// if we find a directory, get a file sub-list
 		if (S_ISDIR(st.st_mode))
