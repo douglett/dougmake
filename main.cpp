@@ -171,6 +171,7 @@ int compile(const cfile &cf, int& did_compile) {
 	if (latest_modtime(objname) < latest_modtime(cf)) {
 		did_compile = 1;
 		string command = config::CC() 
+			+ " -I."
 			+ ( cf.path == "." ? "" : " -I" + cf.path )
 			+ config::pkg_config("cflags")
 			+ " -c -o " + objname 
