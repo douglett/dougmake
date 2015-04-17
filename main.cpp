@@ -256,7 +256,7 @@ int main(int argc, char** argv) {
 	}
 
 	// make the main executable
-	string outfile = "bin/main.out";
+	string outfile = "bin/" + config::outfile();
 	int err = link_all(outfile, compile_count);
 	if (err)
 		return err;
