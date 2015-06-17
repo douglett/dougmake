@@ -9,6 +9,7 @@
 
 #include "helpers.h"
 #include "config.h"
+#include "args.h"
 
 using namespace std;
 
@@ -37,13 +38,13 @@ const string txt_reset = "\e[0m";
 
 // string CC = "clang++ -std=c++11 -stdlib=libc++  -Wall";  // sensible default
 vector<cfile> files;
-vector<string> args;
 string bin_files;
 int currenttime = 0;
 
 
 
 // --- helpers ---
+
 
 
 // helper - true for "*.cpp"
@@ -79,27 +80,10 @@ double latest_modtime(const string &fpath) {
 	return (double)st.st_mtime;
 }
 
-// helper - returns true if argument 'arg' is in array 'args'
-int has_arg(string arg) {
-	for (auto a : args)
-		if (a == arg)
-			return 1;
-	return 0;
-}
-
 
 
 // --- parse actions ---
 
-
-// get command line arguments into array 'args'
-int get_arguments(int argc, char** argv) {
-	for (int i = 0; i < argc; i++) {
-		string s = tolower(argv[i]);
-		args.push_back(s);
-	}
-	return 0;
-}
 
 
 // gets all files in directory 'path'
@@ -200,19 +184,17 @@ int link_all(string outfile, int compile_count) {
 
 int main(int argc, char** argv) {
 	currenttime = time(NULL);
-	get_arguments(argc, argv);
+	args::parse(argc, argv);
 
-	// print help and exit
-	if (has_arg("--help") || has_arg("-?")) {
-		cout << "options: -?, clean, rebuild, run" << endl;
+	// check if we need to print help messages. if so, do it and exit
+	if (args::print_help())
 		return 0;
-	}
 
 	// check if we just need to do cleanup
-	if (has_arg("clean") || has_arg("rebuild")) {
+	if (args::has_arg("clean") || args::has_arg("rebuild")) {
 		cout << "cleaning bin files..." << endl;
 		system("rm -rf bin");  // just delete bin and exit
-		if (has_arg("clean"))
+		if (args::has_arg("clean"))
 			return 0;
 	}
 
@@ -264,7 +246,7 @@ int main(int argc, char** argv) {
 	cout << endl;
 
 	// run the executable, if required
-	if (has_arg("run")) {
+	if (args::has_arg("run")) {
 		cout << "running: " << outfile << endl;
 		err = system(outfile.c_str());
 	}
