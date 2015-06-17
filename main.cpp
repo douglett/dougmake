@@ -126,16 +126,22 @@ int filelist(string path) {
 // find a list of #includes in the current file, and save in the files 'deps' array
 int find_includes(cfile &cf) {
 	smatch match;
-	string s;
+	string s, fname;
 	fstream file;
 	file.open(cf.fpath());
 
 	while (!file.eof()) {
 		getline(file, s);
 		if (regex_search(s, match, includefile)) {
+			// find base filename, in case we are searching through sub-directories
+			fname = match[1];
+			int pos = fname.find_last_of('/');
+			if (pos != string::npos)
+				fname = fname.substr(pos+1);
+			// cout << fname << "  " << pos << endl;
 			// add file indexes to the list
 			for (int i = 0; i < files.size(); i++) {
-				if (files[i].fname == match[1])
+				if (files[i].fname == fname)
 					cf.deps.push_back(i);
 			}
 		}
