@@ -12,7 +12,8 @@ using namespace std;
 namespace config {
 
 	static map<string, string> config = {
-		{ "cc", "clang++ -std=c++11 -Wall" },  // sensible default compiler
+		{ "cc", "clang++ -std=c++11 -Wall" },  // sensible default C++ compiler
+		{ "cc1", "clang -std=c99 -Wall" },  // sensible default C compiler
 		{ "out", "main.out" }  // sensible main filename 
 	};
 
@@ -61,11 +62,12 @@ namespace config {
 	}
 
 
-	string CC() {
+	string CC(string extension) {
 		string cc = config["cc"];
-		if (config.count("ccflags")) {
+		if (extension == "c")
+			cc = config["cc1"];
+		if (config.count("ccflags"))
 			cc += " " + config["ccflags"];
-		}
 		return cc;
 	}
 

@@ -32,6 +32,7 @@ public:
 const regex cppfile(".+\\.(cpp|hpp|c|h)");
 const regex cppsourcefile("(.+)\\.(cpp|c)");
 const regex includefile("\\s*#include\\s+\"(.+)\"");
+const regex fileextension("^.+\\.(.+)$");
 
 const string txt_cyan = "\e[0;36m";
 const string txt_reset = "\e[0m";
@@ -52,6 +53,14 @@ int is_source(const cfile &cf) {
 	if (regex_match(cf.fname, cppsourcefile))
 		return 1;
 	return 0;
+}
+
+// helper - return extension substring of file name
+string file_extension(const cfile &cf) {
+	smatch match;
+	if (regex_search(cf.fname, match, fileextension))
+		return tolower(match[1]);
+	return "";
 }
 
 // helper - returns (fname).cpp from filename
@@ -160,13 +169,14 @@ int compile(const cfile &cf, int& did_compile) {
 
 	if (latest_modtime(objname) < latest_modtime(cf)) {
 		did_compile = 1;
-		string command = config::CC() 
+		string command = config::CC( file_extension(cf) ) 
 			+ " -I."
 			+ ( cf.path == "." ? "" : " -I" + cf.path )
 			+ config::pkg_config("cflags")
 			+ " -c -o " + objname 
 			+ " " + cf.fpath();
 		cout << command << endl;
+		// cout << file_extension(cf) << endl;
 		return system(command.c_str());
 	}
 	return 0;  // no error code
@@ -176,7 +186,7 @@ int compile(const cfile &cf, int& did_compile) {
 // link all files in "./bin". 'compile_count' is the number of .o files compiled in the compile step
 int link_all(string outfile, int compile_count) {
 	if (latest_modtime(outfile) == 0 || compile_count > 0) {
-		string cmd = config::CC() 
+		string cmd = config::CC("cpp") 
 			+ bin_files 
 			+ config::pkg_config("libs") 
 			+ " -o " + outfile;
