@@ -12,8 +12,15 @@ using namespace std;
 namespace config {
 
 	static map<string, string> config = {
+#if defined __clang__
+		// clang defaults
 		{ "cc", "clang++ -std=c++11 -Wall" },  // sensible default C++ compiler
 		{ "cc1", "clang -std=c99 -Wall" },  // sensible default C compiler
+#else
+		// defaults to __GCC__ . fuck other compilers
+		{ "cc", "g++ -std=c++11 -Wall -Wno-sign-compare" },  // sensible default C++ compiler
+		{ "cc1", "gcc -std=c99 -Wall" },  // sensible default C compiler
+#endif
 		{ "out", "main.out" }  // sensible main filename 
 	};
 

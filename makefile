@@ -1,9 +1,14 @@
 OUT=main.out
 SRC=main.cpp helpers.cpp config.cpp args.cpp
 HEAD=helpers.h config.h args.h
+ifdef __clang__
+	CC=clang++
+else
+	CC=g++
+endif
 
 $(OUT): $(SRC) $(HEAD)
-	clang++ -Wall -std=c++11 -stdlib=libc++ -o $(OUT) $(SRC)
+	$(CC) -std=c++11 -Wall -Wno-sign-compare -o $(OUT) $(SRC)
 
 run: $(OUT)
 	./$(OUT)
