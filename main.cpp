@@ -209,7 +209,11 @@ int main(int argc, char** argv) {
 	// check if we just need to do cleanup
 	if (args::has_arg("clean") || args::has_arg("rebuild") || args::has_switch("b")) {
 		cout << "cleaning bin files..." << endl;
-		system("rm -rf bin");  // just delete bin and exit
+		int err = system("rm -rf bin");  // just delete bin and exit
+		if (err) {
+			cerr << "system error: " << err << endl;
+			return err;
+		}
 		if (args::has_arg("clean"))
 			return 0;
 	}
@@ -249,7 +253,7 @@ int main(int argc, char** argv) {
 		if (is_source(f))
 			err = compile(f, did_compile);
 		if (err)
-			return 1;  // stop here if there was an error
+			return 1;  // stop here if there was an error. compiler reports errors
 		if (did_compile)
 			compile_count++;
 	}
@@ -258,15 +262,19 @@ int main(int argc, char** argv) {
 	string outfile = "bin/" + config::outfile();
 	int err = link_all(outfile, compile_count);
 	if (err)
-		return err;
+		return err;  // compiler reports errors
 	cout << endl;
 
 	// run the executable, if required
 	if (args::has_arg("run")) {
 		cout << "running: " << outfile << endl;
 		err = system(outfile.c_str());
+		if (err) {
+			cerr << "system error: " << err << endl;
+			return err;
+		}
 	}
 
-	// return either main.out make error, or run error
-	return err;
+	// all ok
+	return 0;
 }
