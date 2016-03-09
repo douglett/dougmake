@@ -207,7 +207,7 @@ int main(int argc, char** argv) {
 		return 0;
 
 	// check if we just need to do cleanup
-	if (args::has_arg("clean") || args::has_arg("rebuild")) {
+	if (args::has_arg("clean") || args::has_arg("rebuild") || args::has_switch("b")) {
 		cout << "cleaning bin files..." << endl;
 		system("rm -rf bin");  // just delete bin and exit
 		if (args::has_arg("clean"))
