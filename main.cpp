@@ -259,15 +259,17 @@ int main(int argc, char** argv) {
 
 	// make the main executable
 	string outfile = "bin/" + config::outfile();
-	int err = link_all(outfile, compile_count);
-	if (err)
-		return err;  // compiler reports errors
+	{
+		int err = link_all(outfile, compile_count);
+		if (err)
+			return err;  // compiler reports errors
+	}
 
 	// run the executable, if required
 	if (args::has_arg("run")) {
 		cout << txt_cyan << "running: " << outfile << endl
 			<< "---" << txt_reset << endl;
-		err = system(outfile.c_str());
+		int err = system(outfile.c_str());
 		if (err) {
 			cerr << "system error: " << err << endl;
 			return err;
