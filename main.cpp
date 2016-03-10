@@ -238,13 +238,12 @@ int main(int argc, char** argv) {
 
 	// display dependancies of this file
 	for (auto &f : files) {
-		cout << txt_cyan << f.fpath() << " :: " << txt_reset;
+		cout << "  " << txt_cyan << f.fpath() << " :: " << txt_reset;
 		for (auto i : f.deps)
 			cout << files[i].fname << "  ";
 		// cout << "]  " << (__int64_t)latest_modtime(f) << endl;
 		cout << endl;
 	}
-	cout << endl;
 
 	// compile all files
 	int compile_count = 0;
@@ -263,7 +262,6 @@ int main(int argc, char** argv) {
 	int err = link_all(outfile, compile_count);
 	if (err)
 		return err;  // compiler reports errors
-	cout << endl;
 
 	// run the executable, if required
 	if (args::has_arg("run")) {
