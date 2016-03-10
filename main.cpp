@@ -265,7 +265,8 @@ int main(int argc, char** argv) {
 
 	// run the executable, if required
 	if (args::has_arg("run")) {
-		cout << "running: " << outfile << endl;
+		cout << txt_cyan << "running: " << outfile << endl
+			<< "---" << txt_reset << endl;
 		err = system(outfile.c_str());
 		if (err) {
 			cerr << "system error: " << err << endl;
