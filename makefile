@@ -3,6 +3,8 @@ SRC=main.cpp helpers.cpp config.cpp args.cpp
 HEAD=helpers.h config.h args.h
 ifdef __clang__
 	CC=clang++
+else ifdef clang
+	CC=clang++ -stdlib=libc++
 else
 	CC=g++
 endif

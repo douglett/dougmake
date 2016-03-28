@@ -72,11 +72,17 @@ string cpp_base_fname(const cfile &cf) {
 }
 
 // helper - latest modified file, uses file info
-double latest_modtime(const cfile &cf) {
+//   uses crude MAX_DEPTH to prevent possible recursion problems
+double latest_modtime(const cfile &cf, int depth = 0) {
+	static const int MAX_DEPTH = 10;
 	double mtime = cf.mtime;
-	for (auto i : cf.deps)
-		if (files[i].mtime > mtime)
-			mtime = files[i].mtime;
+	if (depth > MAX_DEPTH)
+		return mtime;
+	for (auto i : cf.deps) {
+		int newtime = latest_modtime(files[i], depth+1);
+		if (newtime > mtime)
+			mtime = newtime;
+	}
 	return mtime;
 }
 
