@@ -69,12 +69,17 @@ namespace config {
 	}
 
 
+	string ccflags() {
+		if (!config.count("ccflags"))
+			return "";
+		return " " + config["ccflags"];
+	}
+
+
 	string CC(string extension) {
 		string cc = config["cc"];
 		if (extension == "c")
 			cc = config["cc1"];
-		if (config.count("ccflags"))
-			cc += " " + config["ccflags"];
 		return cc;
 	}
 

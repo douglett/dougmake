@@ -176,11 +176,12 @@ int compile(const cfile &cf, int& did_compile) {
 	if (latest_modtime(objname) < latest_modtime(cf)) {
 		did_compile = 1;
 		string command = config::CC( file_extension(cf) ) 
+			+ " " + cf.fpath()
+			+ config::ccflags()
 			+ " -I."
 			+ ( cf.path == "." ? "" : " -I" + cf.path )
 			+ config::pkg_config("cflags")
-			+ " -c -o " + objname 
-			+ " " + cf.fpath();
+			+ " -c -o " + objname;
 		cout << command << endl;
 		// cout << file_extension(cf) << endl;
 		return system(command.c_str());
@@ -194,6 +195,7 @@ int link_all(string outfile, int compile_count) {
 	if (latest_modtime(outfile) == 0 || compile_count > 0) {
 		string cmd = config::CC("cpp") 
 			+ bin_files 
+			+ config::ccflags()
 			+ config::pkg_config("libs") 
 			+ " -o " + outfile;
 		cout << cmd << endl;
