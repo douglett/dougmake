@@ -286,6 +286,8 @@ int main(int argc, char** argv) {
 
 	// run the executable, if required
 	if (args::has_arg("run")) {
+		if (platform::OS_STRING == "windows")
+			outfile[3] = '\\';  // this will fail on windows with a forward slash for some reason
 		cout << txt_cyan << "running: " << outfile << endl
 			<< "---" << txt_reset << endl;
 		int err = system(outfile.c_str());
