@@ -217,20 +217,31 @@ int main(int argc, char** argv) {
 	// check if we just need to do cleanup
 	if (args::has_arg("clean") || args::has_arg("rebuild") || args::has_switch("b")) {
 		cout << "cleaning bin files..." << endl;
-		int err = system("rm -rf bin");  // just delete bin and exit
+		// just delete bin and exit
+		int err = ( platform::OS_STRING == "windows" 
+			? system("if exist bin rmdir /Q/S bin")
+			: system("rm -rf bin") );
 		if (err) {
 			cerr << "system error: " << err << endl;
 			return err;
 		}
 		if (args::has_arg("clean"))
 			return 0;
+	}	
+
+	// make bin directory
+	{
+		int err = ( platform::OS_STRING == "windows" 
+			? system("if not exist bin mkdir bin")
+			: system("mkdir -p bin") );
+		if (err) {
+			cerr << "system error: " << err << endl;
+			return err;
+		}
 	}
 
-	// load config from dmake.conf file
-	config::load();
-
-	system("mkdir -p bin");  // make bin directory
-	filelist(".");  // get all base files
+	config::load();  // load config from dmake.conf file
+	filelist(".");   // get all base files
 
 	if (files.size() == 0) {
 		cerr << "no source files found." << endl;

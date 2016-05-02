@@ -6,4 +6,8 @@
 std::string tolower(std::string str);
 std::string choppa(std::string str);
 
+namespace platform {
+	extern const std::string OS_STRING;
+}
+
 #endif

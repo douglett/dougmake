@@ -23,3 +23,14 @@ string choppa(string str) {
 		str.erase(last+1);
 	return str;
 }
+
+
+// platform specifiv vars
+namespace platform {
+	const string OS_STRING = 
+	#ifdef __WIN32__
+		"windows";
+	#else
+		"unix";
+	#endif 
+}
