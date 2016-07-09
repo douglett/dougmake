@@ -8,6 +8,7 @@ namespace config {
 	int show_all();
 	std::string pkg_config(std::string flags);
 	std::string ccflags();
+	std::string ldflags();
 	std::string CC(std::string extension);
 	std::string outfile();
 }

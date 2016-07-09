@@ -54,7 +54,8 @@ namespace args {
 			cout << "dmake.conf options:" << endl
 				<< "\t" << "cc: [C compiler]" << endl
 				<< "\t" << "pkg-config: [package names]" << endl
-				<< "\t" << "ccflags: [manual compile flags]" << endl;
+				<< "\t" << "ccflags: [manual compile flags]" << endl
+				<< "\t" << "ldflags: [manual linker flags]" << endl;
 			return 1;
 		}
 		return 0;

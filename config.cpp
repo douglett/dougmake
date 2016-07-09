@@ -76,6 +76,13 @@ namespace config {
 	}
 
 
+	string ldflags() {
+		if (!config.count("ldflags"))
+			return "";
+		return " " + config["ldflags"];
+	}
+
+
 	string CC(string extension) {
 		string cc = config["cc"];
 		if (extension == "c")

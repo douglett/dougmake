@@ -195,7 +195,7 @@ int link_all(string outfile, int compile_count) {
 	if (latest_modtime(outfile) == 0 || compile_count > 0) {
 		string cmd = config::CC("cpp") 
 			+ bin_files 
-			+ config::ccflags()
+			+ config::ldflags()
 			+ config::pkg_config("libs") 
 			+ " -o " + outfile;
 		cout << cmd << endl;
