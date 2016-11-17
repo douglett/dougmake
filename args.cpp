@@ -55,7 +55,8 @@ namespace args {
 				<< "\t" << "cc: [C compiler]" << endl
 				<< "\t" << "pkg-config: [package names]" << endl
 				<< "\t" << "ccflags: [manual compile flags]" << endl
-				<< "\t" << "ldflags: [manual linker flags]" << endl;
+				<< "\t" << "ldflags: [manual linker flags]" << endl
+				<< "\t" << "(optional) platform specific switches: -win -lin -mac  (e.g. ccflags-mac: -Werror)" << endl;
 			return 1;
 		}
 		return 0;

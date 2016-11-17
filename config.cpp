@@ -59,13 +59,16 @@ namespace config {
 
 
 	string pkg_config(string flags) {
-		if (!config.count("pkg-config"))
-			return "";  // no pkg-config set
-		else if (flags == "cflags")
-			return string(" `pkg-config --cflags ") + config["pkg-config"] + "`";
-		else if (flags == "libs")
-			return string(" `pkg-config --libs ") + config["pkg-config"] + "`";
-		return "";  // unknown option - just return nothing
+		// find out if pkg-config exists
+		const string& os = platform::OS_STRING_EXT;
+		string pkg;
+		if      (config.count("pkg-config-"+os))  pkg = "pkg-config-"+os;
+		else if (config.count("pkg-config"))      pkg = "pkg-config";
+		else    return "";
+		// if it exists, get the correct flags
+		if      (flags == "cflags")  return string(" `pkg-config --cflags ") + config[pkg] + "`";
+		else if (flags == "libs")    return string(" `pkg-config --libs ") + config[pkg] + "`";
+		else    return "";
 	}
 
 
