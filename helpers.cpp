@@ -27,10 +27,14 @@ string choppa(string str) {
 
 // platform specifiv vars
 namespace platform {
-	const string OS_STRING = 
-	#ifdef __WIN32__
-		"windows";
-	#else
-		"unix";
-	#endif 
+#ifdef _WIN32
+	const string OS_STRING     = "windows";
+	const string OS_STRING_EXT = "win";
+#elif __APPLE__
+	const string OS_STRING     = "macosx";
+	const string OS_STRING_EXT = "mac";
+#else
+	const string OS_STRING     = "linux";
+	const string OS_STRING_EXT = "lin";
+#endif 
 }

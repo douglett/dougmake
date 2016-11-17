@@ -8,6 +8,7 @@ std::string choppa(std::string str);
 
 namespace platform {
 	extern const std::string OS_STRING;
+	extern const std::string OS_STRING_EXT;
 }
 
 #endif

@@ -70,24 +70,26 @@ namespace config {
 
 
 	string ccflags() {
-		if (!config.count("ccflags"))
-			return "";
-		return " " + config["ccflags"];
+		const string& os = platform::OS_STRING_EXT;
+		if (config.count("ccflags-"+os))  return " " + config["ccflags-"+os];
+		if (config.count("ccflags"))      return " " + config["ccflags"];
+		return "";
 	}
 
 
 	string ldflags() {
-		if (!config.count("ldflags"))
-			return "";
-		return " " + config["ldflags"];
+		const string& os = platform::OS_STRING_EXT;
+		if (config.count("ldflags-"+os))  return " " + config["ldflags-"+os];
+		if (config.count("ldflags"))      return " " + config["ldflags"];
+		return "";
 	}
 
 
 	string CC(string extension) {
-		string cc = config["cc"];
-		if (extension == "c")
-			cc = config["cc1"];
-		return cc;
+		const string& os = platform::OS_STRING_EXT;
+		string ext = ( extension == "c" ? "cc1" : "cc" );  // select c or cpp compiler
+		if (config.count(ext+"-"+os))  return config[ext+"-"+os];  // platform specific compiler
+		return config[ext];
 	}
 
 
