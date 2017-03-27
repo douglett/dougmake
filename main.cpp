@@ -32,7 +32,7 @@ public:
 const regex cppfile(".+\\.(cpp|hpp|c|h)");
 const regex cppsourcefile("(.+)\\.(cpp|c)");
 const regex includefile("\\s*#include\\s+\"(.+)\"");
-const regex fileextension("^.+\\.(.+)$");
+// const regex fileextension("^.+\\.(.+)$");
 
 const string txt_cyan = "\e[0;36m";
 const string txt_reset = "\e[0m";
@@ -59,10 +59,16 @@ static int is_cpp_source(const cfile &cf) {
 	return 0;
 }
 // helper - return extension substring of file name
-static string file_extension(const cfile &cf) {
-	smatch match;
-	if (regex_search(cf.fname, match, fileextension))
-		return tolower(match[1]);
+// static string file_extension(const cfile &cf) {
+// 	smatch match;
+// 	if (regex_search(cf.fname, match, fileextension))
+// 		return tolower(match[1]);
+// 	return "";
+// }
+static string file_extension(const string& fname) {
+	int ex = fname.find_last_of('.');
+	if (ex != string::npos)
+		return fname.substr(ex+1);
 	return "";
 }
 // helper - returns (fname).cpp from filename
@@ -182,7 +188,7 @@ int compile(const cfile &cf, int& did_compile) {
 
 	if (latest_modtime(objname) < latest_modtime(cf)) {
 		did_compile = 1;
-		string command = config::CC( file_extension(cf) ) 
+		string command = config::CC( file_extension(cf.fname) ) 
 			+ " " + cf.fpath()
 			+ config::ccflags()
 			+ " -I."
@@ -190,7 +196,7 @@ int compile(const cfile &cf, int& did_compile) {
 			+ config::pkg_config("cflags")
 			+ " -c -o " + objname;
 		cout << command << endl;
-		// cout << file_extension(cf) << endl;
+		// cout << file_extension(cf.fname) << endl;
 		return system(command.c_str());
 	}
 	return 0;  // no error code
