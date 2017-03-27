@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
-#include <regex>
+// #include <regex>
+#include <sstream>
 #include <vector>
 
 #include <dirent.h>
@@ -43,7 +44,7 @@ int currenttime = 0;
 
 // const regex cppfile(".+\\.(cpp|hpp|c|h)");
 // const regex cppsourcefile("(.+)\\.(cpp|c)");
-const regex includefile("\\s*#include\\s+\"(.+)\"");
+// const regex includefile("\\s*#include\\s+\"(.+)\"");
 // const regex fileextension("^.+\\.(.+)$");
 
 // helper - return extension substring of file name
@@ -69,6 +70,13 @@ const regex includefile("\\s*#include\\s+\"(.+)\"");
 // static string cpp_base_fname(const cfile &cf) {
 // 	smatch match;
 // 	if (regex_search(cf.fname, match, cppsourcefile))
+// 		return match[1];
+// 	return "";
+// }
+// check for #include line
+// static string include_fname(const string& line) {
+// 	smatch match;
+// 	if (regex_search(line, match, includefile))
 // 		return match[1];
 // 	return "";
 // }
@@ -103,10 +111,17 @@ static string cpp_base_fname(const string& fname) {
 }
 // check for #include line
 static string include_fname(const string& line) {
-	smatch match;
-	if (regex_search(line, match, includefile))
-		return match[1];
-	return "";
+	stringstream ss(line);
+	string s;
+	ss >> s >> ws;
+	if (tolower(s) != "#include")  return "";  // #include line
+	if (ss.peek() != '"')  return "";  // check for string start
+	s = "",  ss.get();  // prepare loop
+	while (ss.peek() != '"') {
+		if (ss.peek() == EOF)  return "";
+		s += ss.get();
+	}
+	return s;
 }
 // helper - latest modified file, uses file info
 //   uses crude MAX_DEPTH to prevent possible recursion problems
@@ -175,7 +190,6 @@ int filelist(string path) {
 
 // find a list of #includes in the current file, and save in the files 'deps' array
 int find_includes(cfile &cf) {
-	smatch match;
 	string s, fname;
 	fstream file;
 	file.open(cf.fpath());
@@ -183,9 +197,9 @@ int find_includes(cfile &cf) {
 	while (!file.eof()) {
 		getline(file, s);
 		fname = include_fname(s);
+		// printf(":: [%s]  %s\n", fname.c_str(), s.c_str());
 		if (fname.length()) {
 			// find base filename, in case we are searching through sub-directories
-			fname = match[1];
 			int pos = fname.find_last_of('/');
 			if (pos != string::npos)
 				fname = fname.substr(pos+1);
