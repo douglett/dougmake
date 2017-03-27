@@ -46,34 +46,42 @@ int currenttime = 0;
 
 // --- helpers ---
 
-
-
-// helper - true for "*.cpp"
-int is_source(const cfile &cf) {
+// is c++ source/header file
+static int is_cpp(const string& fname) {
+	if (regex_match(fname, cppfile))
+		return 1;
+	return 0;
+}
+// helper - true for "*.cpp/*.c"
+static int is_cpp_source(const cfile &cf) {
 	if (regex_match(cf.fname, cppsourcefile))
 		return 1;
 	return 0;
 }
-
 // helper - return extension substring of file name
-string file_extension(const cfile &cf) {
+static string file_extension(const cfile &cf) {
 	smatch match;
 	if (regex_search(cf.fname, match, fileextension))
 		return tolower(match[1]);
 	return "";
 }
-
 // helper - returns (fname).cpp from filename
-string cpp_base_fname(const cfile &cf) {
+static string cpp_base_fname(const cfile &cf) {
 	smatch match;
 	if (regex_search(cf.fname, match, cppsourcefile))
 		return match[1];
 	return "";
 }
-
+// check for #include line
+static string include_fname(const string& line) {
+	smatch match;
+	if (regex_search(line, match, includefile))
+		return match[1];
+	return "";
+}
 // helper - latest modified file, uses file info
 //   uses crude MAX_DEPTH to prevent possible recursion problems
-double latest_modtime(const cfile &cf, int depth = 0) {
+static double latest_modtime(const cfile &cf, int depth = 0) {
 	static const int MAX_DEPTH = 10;
 	double mtime = cf.mtime;
 	if (depth > MAX_DEPTH)
@@ -85,9 +93,8 @@ double latest_modtime(const cfile &cf, int depth = 0) {
 	}
 	return mtime;
 }
-
 // helper - latest modified file. takes a single file (anything, obj file)
-double latest_modtime(const string &fpath) {
+static double latest_modtime(const string &fpath) {
 	struct stat st;
 	int err = stat(fpath.c_str(), &st);  // get file statistics
 	if (err)
@@ -123,13 +130,12 @@ int filelist(string path) {
 			filelist(filepath);
 		// otherwise, add file info to the file list
 		else {
-			if (regex_match(ent->d_name, cppfile)) {
+			if (is_cpp(ent->d_name))
 				files.push_back(cfile(
 					ent->d_name,
 					path,
 					st.st_mtime
 				));
-			}
 		}
 	}
 
@@ -147,7 +153,8 @@ int find_includes(cfile &cf) {
 
 	while (!file.eof()) {
 		getline(file, s);
-		if (regex_search(s, match, includefile)) {
+		fname = include_fname(s);
+		if (fname.length()) {
 			// find base filename, in case we are searching through sub-directories
 			fname = match[1];
 			int pos = fname.find_last_of('/');
@@ -268,7 +275,7 @@ int main(int argc, char** argv) {
 	int compile_count = 0;
 	for (auto &f : files) {
 		int err = 0, did_compile = 0;
-		if (is_source(f))
+		if (is_cpp_source(f))
 			err = compile(f, did_compile);
 		if (err)
 			return 1;  // stop here if there was an error. compiler reports errors
