@@ -261,8 +261,8 @@ int main(int argc, char** argv) {
 	args::parse(argc, argv);
 
 	// check if we need to print help messages. if so, do it and exit
-	if (args::print_help())
-		return 0;
+	if (args::print_help())  return 0;
+	if (args::print_version())  return 0;
 
 	// check if we just need to do cleanup
 	if (args::has_arg("clean") || args::has_arg("rebuild") || args::has_switch("b")) {

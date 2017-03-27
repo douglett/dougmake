@@ -8,9 +8,7 @@ using namespace std;
 
 
 namespace args {
-	
 	static vector<string> args;
-
 
 	// get command line arguments into array 'args'
 	int parse(int argc, char** argv) {
@@ -20,8 +18,6 @@ namespace args {
 		}
 		return 0;
 	}
-
-
 	// helper - returns true if argument 'arg' is in array 'args'
 	int has_arg(string arg) {
 		for (const auto &a : args)
@@ -29,8 +25,6 @@ namespace args {
 				return 1;
 		return 0;
 	}
-
-
 	// helper - returns true if switch 'sw' exists in args array
 	int has_switch(string sw) {
 		int start;
@@ -45,8 +39,6 @@ namespace args {
 		}
 		return 0;
 	}
-
-
 	// print a help message
 	int print_help() {
 		if (args::has_switch("help") || args::has_switch("?") || args::has_switch("h")) {
@@ -61,5 +53,12 @@ namespace args {
 		}
 		return 0;
 	}
-
-}
+	// pring version number
+	int print_version() {
+		if (args::has_switch("v") || args::has_switch("ver") || args::has_switch("version")) {
+			cout << "dougmake: ver." << VER << endl;
+			return 1;
+		}
+		return 0;
+	}
+} // end args
