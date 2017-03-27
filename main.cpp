@@ -29,11 +29,6 @@ public:
 	}
 };
 
-const regex cppfile(".+\\.(cpp|hpp|c|h)");
-const regex cppsourcefile("(.+)\\.(cpp|c)");
-const regex includefile("\\s*#include\\s+\"(.+)\"");
-// const regex fileextension("^.+\\.(.+)$");
-
 const string txt_cyan = "\e[0;36m";
 const string txt_reset = "\e[0m";
 
@@ -46,18 +41,11 @@ int currenttime = 0;
 
 // --- helpers ---
 
-// is c++ source/header file
-static int is_cpp(const string& fname) {
-	if (regex_match(fname, cppfile))
-		return 1;
-	return 0;
-}
-// helper - true for "*.cpp/*.c"
-static int is_cpp_source(const cfile &cf) {
-	if (regex_match(cf.fname, cppsourcefile))
-		return 1;
-	return 0;
-}
+// const regex cppfile(".+\\.(cpp|hpp|c|h)");
+// const regex cppsourcefile("(.+)\\.(cpp|c)");
+const regex includefile("\\s*#include\\s+\"(.+)\"");
+// const regex fileextension("^.+\\.(.+)$");
+
 // helper - return extension substring of file name
 // static string file_extension(const cfile &cf) {
 // 	smatch match;
@@ -65,17 +53,52 @@ static int is_cpp_source(const cfile &cf) {
 // 		return tolower(match[1]);
 // 	return "";
 // }
+// is c++ source/header file
+// static int is_cpp(const string& fname) {
+// 	if (regex_match(fname, cppfile))
+// 		return 1;
+// 	return 0;
+// }
+// helper - true for "*.cpp/*.c"
+// static int is_cpp_source(const cfile &cf) {
+// 	if (regex_match(cf.fname, cppsourcefile))
+// 		return 1;
+// 	return 0;
+// }
+// helper - returns (fname).cpp from filename
+// static string cpp_base_fname(const cfile &cf) {
+// 	smatch match;
+// 	if (regex_search(cf.fname, match, cppsourcefile))
+// 		return match[1];
+// 	return "";
+// }
+
+// helper - return extension substring of file name
 static string file_extension(const string& fname) {
 	int ex = fname.find_last_of('.');
 	if (ex != string::npos)
-		return fname.substr(ex+1);
+		return tolower(fname.substr(ex+1));
 	return "";
 }
+// helper - true for "*.cpp/*.c"
+static int is_cpp_source(const string& fname) {
+	string ex = file_extension(fname);
+	if (ex == "cpp")  return 1;
+	if (ex == "c"  )  return 1;
+	return 0;
+}
+// is c++ source or header file
+static int is_cpp(const string& fname) {
+	string ex = file_extension(fname);
+	if (ex == "hpp")  return 1;
+	if (ex == "h"  )  return 1;
+	return is_cpp_source(fname);
+}
 // helper - returns (fname).cpp from filename
-static string cpp_base_fname(const cfile &cf) {
-	smatch match;
-	if (regex_search(cf.fname, match, cppsourcefile))
-		return match[1];
+static string cpp_base_fname(const string& fname) {
+	string ex = file_extension(fname);
+	if (is_cpp_source(fname))
+		return fname.substr(0, fname.find_last_of('.'));
 	return "";
 }
 // check for #include line
@@ -183,7 +206,7 @@ int find_includes(cfile &cf) {
 // compile single file
 int compile(const cfile &cf, int& did_compile) {
 	did_compile = 0;
-	string objname = "bin/" + cpp_base_fname(cf) + ".o";
+	string objname = "bin/" + cpp_base_fname(cf.fname) + ".o";
 	bin_files += " " + objname;
 
 	if (latest_modtime(objname) < latest_modtime(cf)) {
@@ -281,7 +304,7 @@ int main(int argc, char** argv) {
 	int compile_count = 0;
 	for (auto &f : files) {
 		int err = 0, did_compile = 0;
-		if (is_cpp_source(f))
+		if (is_cpp_source(f.fname))
 			err = compile(f, did_compile);
 		if (err)
 			return 1;  // stop here if there was an error. compiler reports errors
