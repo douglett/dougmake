@@ -10,7 +10,7 @@ else
 endif
 
 $(OUT): $(SRC) $(HEAD)
-	$(CC) -std=c++11 -Wall -Wno-sign-compare -o $(OUT) $(SRC)
+	$(CC) -std=c++11 -Wall -Wno-sign-compare -Ofast -o $(OUT) $(SRC)
 
 run: $(OUT)
 	./$(OUT)
